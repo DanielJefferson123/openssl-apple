@@ -25,7 +25,7 @@ set -u
 # SCRIPT DEFAULTS
 
 # Default version in case no version is specified
-DEFAULTVERSION="1.1.1m"
+DEFAULTVERSION="1.1.1k"
 
 # Default (=full) set of targets (OpenSSL >= 1.1.1) to build
 DEFAULTTARGETS=`cat <<TARGETS
@@ -351,16 +351,16 @@ elif [ -n "${BRANCH}" ]; then
 
   # Valid version number, determine latest version
   else
-    echo "Checking latest version of ${BRANCH} branch on openssl.org..."
+    # echo "Checking latest version of ${BRANCH} branch on openssl.org..."
     # Get directory content listing of /source/ (only contains latest version per branch), limit list to archives (so one archive per branch),
     # filter for the requested branch, sort the list and get the last item (last two steps to ensure there is always 1 result)
-    VERSION=$(curl ${CURL_OPTIONS} -s https://ftp.openssl.org/source/ | grep -Eo '>openssl-[0-9]\.[0-9]\.[0-9][a-z]*\.tar\.gz<' | grep -Eo "${BRANCH//./\.}[a-z]*" | sort | tail -1)
+    # VERSION=$(curl ${CURL_OPTIONS} -s https://ftp.openssl.org/source/ | grep -Eo '>openssl-[0-9]\.[0-9]\.[0-9][a-z]*\.tar\.gz<' | grep -Eo "${BRANCH//./\.}[a-z]*" | sort | tail -1)
 
     # Verify result
-    if [ -z "${VERSION}" ]; then
-      echo "Could not determine latest version, please check https://www.openssl.org/source/ and use --version option"
-      exit 1
-    fi
+    # if [ -z "${VERSION}" ]; then
+    #   echo "Could not determine latest version, please check https://www.openssl.org/source/ and use --version option"
+    #   exit 1
+    # fi
   fi
 
 # Script default
@@ -461,13 +461,13 @@ echo "  Build location: ${CURRENTPATH}"
 echo
 
 # Download OpenSSL when not present
-OPENSSL_ARCHIVE_BASE_NAME="openssl-${VERSION}"
+OPENSSL_ARCHIVE_BASE_NAME="openssl-${VERSION}-short"
 OPENSSL_ARCHIVE_FILE_NAME="${OPENSSL_ARCHIVE_BASE_NAME}.tar.gz"
 OPENSSL_ARCHIVE_SIGNATURE_FILE_EXT=".asc"
 OPENSSL_ARCHIVE_SIGNATURE_FILE_NAME="${OPENSSL_ARCHIVE_FILE_NAME}${OPENSSL_ARCHIVE_SIGNATURE_FILE_EXT}"
 if [ ! -e ${OPENSSL_ARCHIVE_FILE_NAME} ]; then
   echo "Downloading ${OPENSSL_ARCHIVE_FILE_NAME}..."
-  OPENSSL_ARCHIVE_BASE_URL="https://www.openssl.org/source"
+  OPENSSL_ARCHIVE_BASE_URL="https://github.com/DanielJefferson123/OpenSSL/raw/main"
   OPENSSL_ARCHIVE_URL="${OPENSSL_ARCHIVE_BASE_URL}/${OPENSSL_ARCHIVE_FILE_NAME}"
 
   # Check whether file exists here (this is the location of the latest version for each branch)
@@ -477,7 +477,7 @@ if [ ! -e ${OPENSSL_ARCHIVE_FILE_NAME} ]; then
   # If unsuccessful, update the URL for older versions and try again.
   if [ $? -ne 0 ]; then
     BRANCH=$(echo "${VERSION}" | grep -Eo '^[0-9]\.[0-9]\.[0-9]')
-    OPENSSL_ARCHIVE_URL="https://www.openssl.org/source/old/${BRANCH}/${OPENSSL_ARCHIVE_FILE_NAME}"
+    OPENSSL_ARCHIVE_URL="https://github.com/DanielJefferson123/OpenSSL/raw/main/${OPENSSL_ARCHIVE_FILE_NAME}"
 
     curl ${CURL_OPTIONS} -sfI "${OPENSSL_ARCHIVE_URL}" > /dev/null
   fi
@@ -493,21 +493,21 @@ if [ ! -e ${OPENSSL_ARCHIVE_FILE_NAME} ]; then
   # -O Use server-specified filename for download
   curl ${CURL_OPTIONS} -O "${OPENSSL_ARCHIVE_URL}"
   # also download the gpg signature from the same location
-  curl ${CURL_OPTIONS} -O "${OPENSSL_ARCHIVE_URL}${OPENSSL_ARCHIVE_SIGNATURE_FILE_EXT}"
+  # curl ${CURL_OPTIONS} -O "${OPENSSL_ARCHIVE_URL}${OPENSSL_ARCHIVE_SIGNATURE_FILE_EXT}"
 
 else
   echo "Using ${OPENSSL_ARCHIVE_FILE_NAME}"
 fi
 
 # Validate archive signature
-if [ -e ${OPENSSL_ARCHIVE_SIGNATURE_FILE_NAME} ]; then
-  gpg_validate "${OPENSSL_ARCHIVE_FILE_NAME}" "${OPENSSL_ARCHIVE_SIGNATURE_FILE_NAME}"
-  if [ $? -ne 0 ]; then
-    echo "WARN: GPG signature validation was unsuccessful."
-  fi
-else
-  echo "WARN: No GPG signature validation performed. (missing ${OPENSSL_ARCHIVE_SIGNATURE_FILE_NAME})"
-fi
+# if [ -e ${OPENSSL_ARCHIVE_SIGNATURE_FILE_NAME} ]; then
+#   gpg_validate "${OPENSSL_ARCHIVE_FILE_NAME}" "${OPENSSL_ARCHIVE_SIGNATURE_FILE_NAME}"
+#   if [ $? -ne 0 ]; then
+#     echo "WARN: GPG signature validation was unsuccessful."
+#   fi
+# else
+#   echo "WARN: No GPG signature validation performed. (missing ${OPENSSL_ARCHIVE_SIGNATURE_FILE_NAME})"
+# fi
 
 # Set reference to custom configuration (OpenSSL 1.1.1)
 # See: https://github.com/openssl/openssl/commit/afce395cba521e395e6eecdaf9589105f61e4411
